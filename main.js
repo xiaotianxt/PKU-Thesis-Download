@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PKU-Thesis-Download
 // @namespace    https://github.com/xiaotianxt
-// @version      0.5
+// @version      0.6
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex.jsp?fid=*
@@ -15,7 +15,7 @@
   "use strict";
   const fid = $("#fid").val();
   const totalPage = parseInt($("#totalPages").html().replace(/ \/ /, ""));
-  const baseUrl = "https://drm.lib.pku.edu.cn/pdfindex.jsp?fid=" + fid;
+  const baseUrl = "http://drm.lib.pku.edu.cn/jumpServlet?fid=" + fid;
   
   const downloadButton = document.querySelector("#thumbtab").cloneNode(true);
   downloadButton.innerHTML = `
