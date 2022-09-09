@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         PKU-Thesis-Download
 // @namespace    https://github.com/xiaotianxt
-// @version      0.3
+// @version      0.4
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex.jsp?fid=*
+// @match        https://drm.lib.pku.edu.cn/pdfindex.jsp?fid=*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=pku.edu.cn
 // @grant        none
 // @license      GNU GPLv3
