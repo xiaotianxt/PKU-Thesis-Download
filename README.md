@@ -5,7 +5,7 @@
 本工具可以：
 
 1. 下载[北京大学学位论文库](https://thesis.lib.pku.edu.cn/)中可查看的论文。
-2. 根据需要调整下载论文的清晰度。
+2. 调整论文清晰度。
 
 本工具不能：
 
@@ -19,7 +19,7 @@
 
 1. 安装[tampermonkey](https://www.tampermonkey.net/index.php?ext=dhdg)，无法科学上网可以参考[这里](https://zhuanlan.zhihu.com/p/128453110)。
 2. 安装[此脚本](https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download)。
-3. 打开某篇论文在线阅读，在左侧列表中调整清晰度，直接点击下载按钮即可。
+3. 打开某篇论文在线阅读，在左侧列表可以调整清晰度、下载文件，根据需要点击即可。
 
 ## 原理
 
