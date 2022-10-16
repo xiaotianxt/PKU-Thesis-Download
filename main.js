@@ -7,6 +7,8 @@
 // @match        http://162.105.134.201/pdfindex.jsp?fid=*
 // @match        https://drm.lib.pku.edu.cn/pdfindex.jsp?fid=*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=pku.edu.cn
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @license      GNU GPLv3
 // ==/UserScript==
 
@@ -20,18 +22,6 @@
   initMonitor();
 
   function initUI() {
-    // jsPDF
-    $("<script />", {
-      type: "text/javascript",
-      src: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
-    }).appendTo("head");
-
-    // notifyjs
-    $("<script />", {
-      type: "text/javascript",
-      src: "https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js",
-    }).appendTo("head");
-
     // 下载按钮
     const downloadButton = document.querySelector("#thumbtab").cloneNode(true);
     downloadButton.innerHTML = `
@@ -150,7 +140,7 @@
 
     // remove duplicated
     const map = new Map();
-    const resolution = localStorage.getItem(RESOLUTION);
+    const resolution = localStorage.getItem(RESOLUTION) || "2f";
     urls.forEach((triple) => {
       triple.forEach((item) => {
         map.set(item.id, item.src.replace(/2f$/, resolution));
