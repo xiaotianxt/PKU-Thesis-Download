@@ -27,6 +27,8 @@
 
 ## 我想获得可编辑的文本，怎么办？
 
-如果为了获得整篇文章文本，可以考虑使用 OCR 工具。如学校免费提供的 Adobe Acrobat 等进行扫描。
+北京大学论文平台接口只提供图片下载，因此只能间接获得可编辑的文本。可以使用 OCR 工具识别文本。
 
-如果为了获得某一段落或部分文本，考虑使用如[白描](https://baimiao.uzero.cn/)、[Bob](https://github.com/ripperhe/Bob)等工具进行小段落内容识别。
+如果为了获得整篇文章文本，可以考虑使用学校免费提供的 Adobe Acrobat（[北京大学软件平台](https://software.w.pku.edu.cn/) > 使用帮助 > ADOBE ID）, 福昕（[北京大学软件平台](https://software.w.pku.edu.cn/) > 福昕 PDF 编辑软件） 等进行扫描。
+
+如果只需要获得某一段落或部分文本，考虑使用如 [白描](https://baimiao.uzero.cn/)、[Bob](https://github.com/ripperhe/Bob) 等 OCR 工具进行小段落内容识别。
