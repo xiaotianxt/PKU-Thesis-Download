@@ -1,6 +1,8 @@
 // ==UserScript==
 // @name         RUC-Thesis-Download
-// @namespace    https://github.com/xiaotianxt
+// @namespace    https://greasyfork.org/zh-CN/scripts/459341-ruc-thesis-download
+// @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
+// @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
 // @version      0.2
 // @description  人大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt

@@ -1,6 +1,8 @@
 // ==UserScript==
 // @name         PKU-Thesis-Download
-// @namespace    https://github.com/xiaotianxt
+// @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
+// @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
+// @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
 // @version      1.1
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
