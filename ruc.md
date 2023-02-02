@@ -1,10 +1,10 @@
-# 北大论文平台下载工具
+# 人大论文平台下载工具
 
 ## 用途
 
 本工具可以：
 
-1. 下载[北京大学学位论文库](https://thesis.lib.pku.edu.cn/)中可查看的论文。
+1. 下载人民大学学位论文库中可查看的论文。
 2. 调整论文清晰度。
 
 本工具不能：
@@ -18,7 +18,7 @@
 ## 用法
 
 1. 安装[tampermonkey](https://www.tampermonkey.net/index.php?ext=dhdg)，无法科学上网可以参考[这里](https://zhuanlan.zhihu.com/p/128453110)。
-2. 安装[此脚本](https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download)。
+2. 安装[此脚本](https://greasyfork.org/zh-CN/scripts/459341-ruc-thesis-download)。
 3. 打开某篇论文在线阅读，在左侧列表可以调整清晰度、下载文件，根据需要点击即可。
 
 ## 原理
@@ -27,8 +27,8 @@
 
 ## 我想获得可编辑的文本，怎么办？
 
-北京大学论文平台接口只提供图片下载，因此只能间接获得可编辑的文本。可以使用 OCR 工具识别文本。
+人民大学论文平台接口只提供图片下载，因此只能间接获得可编辑的文本。可以使用 OCR 工具识别文本。
 
-如果为了获得整篇文章文本，可以考虑使用学校免费提供的 Adobe Acrobat（[北京大学软件平台](https://software.w.pku.edu.cn/) > 使用帮助 > ADOBE ID）, 福昕（[北京大学软件平台](https://software.w.pku.edu.cn/) > 福昕 PDF 编辑软件） 等进行扫描。
+如果为了获得整篇文章文本，可以考虑使用 Adobe Acrobat、福昕等进行扫描。
 
 如果只需要获得某一段落或部分文本，考虑使用如 [白描](https://baimiao.uzero.cn/)、[Bob](https://github.com/ripperhe/Bob) 等 OCR 工具进行小段落内容识别。
