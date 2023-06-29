@@ -24,6 +24,8 @@ const DEFAULT_RESOLUTION = '100';
     msgBox.textContent = msg;
   }
 
+  const MAX_TOLERANCE = 3;
+
   const initUI = async () => waitForElm("#bmtab").then(element => {
     // 下载按钮
     const downloadButton = element.cloneNode(true);
@@ -85,24 +87,26 @@ const DEFAULT_RESOLUTION = '100';
     let cnt = 0;
     message(cnt + "/" + urls.length);
     const base64s = await parallel(urls, async (url, index) => {
-      const tryFetch = async (attempt = 3) => {
+      const tryFetch = async (attempt = MAX_TOLERANCE) => {
         if (!attempt) return;
-        const base64 = await fetch(url).then(res => res.blob()).then(blob => {
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          return new Promise((resolve) => {
-            reader.onloadend = () => {
-              resolve(reader.result);
-            };
+        const base64 = await fetch(url)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            return new Promise((resolve) => {
+              reader.onloadend = () => {
+                resolve(reader.result);
+              };
+            });
           });
-        })
         if (base64.length < 1000) {
           console.log(`error may occur on ${index}, try ${attempt}`);
-          await new Promise(r => setTimeout(r, 1000))
+          await new Promise((r) => setTimeout(r, 1000));
           return tryFetch(attempt - 1);
         }
         return base64;
-      }
+      };
       const res = await tryFetch();
       cnt += 1
       message(cnt + "/" + urls.length);
