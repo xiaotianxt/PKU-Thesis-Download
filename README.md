@@ -1,6 +1,7 @@
 # PKU Thesis Download 北大论文平台下载工具
 
 <div style="display: flex; align-items: center; margin: 2em 0; gap: 1em">
+  <img alt="Static Badge" src="https://img.shields.io/github/stars/xiaotianxt/PKU-Thesis-Download">
   <img src="https://img.shields.io/greasyfork/v/442310" alt="version">
   <img src="https://img.shields.io/greasyfork/dt/442310" alt="total installs">
   <img src="https://img.shields.io/greasyfork/l/442310" alt="license">
