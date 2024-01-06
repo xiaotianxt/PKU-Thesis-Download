@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         BNU-Thesis-Download
+// @name         BNU-Thesis-Download 北师大论文平台下载工具
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
 // @version      0.1
