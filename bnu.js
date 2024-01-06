@@ -6,7 +6,7 @@
 // @description  北师大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        https://etdlib.bnu.edu.cn/read/pdfindex1.jsp?fid=*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=bnu.edu.cn
+// @icon         https://www.bnu.edu.cn/images/favicon.ico
 // @require      https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @license      GNU GPLv3
