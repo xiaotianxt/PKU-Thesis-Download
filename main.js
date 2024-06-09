@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.1.1
+// @version      1.2.0
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -16,12 +16,17 @@
 
 (function () {
   "use strict";
-  const RESOLUTION = "pku_thesis_download.resolution";
+  const OPTIMIZATION = "pku_thesis_download.optimization";
   const fid = $("#fid").val();
   const totalPage = parseInt($("#totalPages").html().replace(/ \/ /, ""));
   const baseUrl = `https://drm.lib.pku.edu.cn/jumpServlet?fid=${fid}`;
   const msgBox = initUI();
-  initMonitor();
+
+  const print = (...args) => console.log("[PKU-Thesis-Download]", ...args);
+
+  if (localStorage.getItem(OPTIMIZATION) === "true" || !localStorage.getItem(OPTIMIZATION)) {
+    optimizeImg();
+  }
 
   function initUI() {
     // 下载按钮
@@ -33,60 +38,28 @@
     document.querySelector("#btnList").appendChild(downloadButton);
     downloadButton.addEventListener("click", download);
 
-    // 清晰度
-    const resolution = localStorage.getItem(RESOLUTION) || "2f";
-    const resolutionRadioGroup = document
-      .querySelector("#thumbtab")
-      .cloneNode(true);
-    resolutionRadioGroup.innerHTML = `
-    <div resolution>
-    <input type="radio" name="resolution" id="standard" value="2f"> <label for="standard">标清</label>
-    <input type="radio" name="resolution" id="high" value="3f"> <label for="high">超清</label>
-    <input type="radio" name="resolution" id="super" value="5f"> <label for="super">巨清</label>
-    </div>
+    // 论文加载优化
+    const optimizeImg = document.querySelector("#thumbtab").cloneNode(true);
+    optimizeImg.innerHTML = `
+    <input type="checkbox" id="optimizeImg" name="optimizeImg" value="true"><label for="optimizeImg">优化加载</label>
     `;
-    document.querySelector("#btnList").appendChild(resolutionRadioGroup);
-    $("input[name='resolution'][value='" + resolution + "']").prop(
-      "checked",
-      true
-    );
-    $("input[name='resolution']").on("click", (e) => {
-      localStorage.setItem(RESOLUTION, e.target.value);
-      $("#jspPane_scroll img").each((i, elem) => {
-        elem.src = elem.src.replace(/2f|3f|5f/, e.target.value);
-      });
-      $.notify("清晰度已调整", "success");
+    optimizeImg.querySelector("input").checked = localStorage.getItem(OPTIMIZATION) === "true" || localStorage.getItem(OPTIMIZATION) === null;
+    optimizeImg.addEventListener("click", (e) => {
+      const checked = e.target.checked;
+      localStorage.setItem(OPTIMIZATION, checked);
+      if (checked) {
+        optimizeImg();
+      }
     });
-    $("input[name='resolution'][value='5f']").on("click", (e) => {
-      $("[resolution]").notify("图片尺寸过大，加载速度会比较缓慢。", "warn");
-    });
+
+    document.querySelector("#btnList").appendChild(optimizeImg);
 
     // msgBox
     const msgBox = downloadButton.querySelector("span");
     return msgBox;
+
   }
 
-  function initMonitor() {
-    const targetNode = document.getElementById("jspPane_scroll");
-    const config = { childList: true, subtree: true };
-    const callback = (mutationList, observer) => {
-      const resolution = document.querySelector(
-        'input[name="resolution"]:checked'
-      ).value;
-      for (const mutation of mutationList) {
-        if (mutation.type === "childList") {
-          const target = mutation.target.querySelector("img");
-          if (target) target.src = target.src.replace(/2f$/, resolution);
-        }
-      }
-    };
-
-    // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(callback);
-
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-  }
 
   async function download(e) {
     e.preventDefault();
@@ -141,13 +114,7 @@
     }
 
     // remove duplicated
-    const map = new Map();
-    const resolution = localStorage.getItem(RESOLUTION) || "2f";
-    urls.forEach((triple) => {
-      triple.forEach((item) => {
-        map.set(item.id, item.src.replace(/2f$/, resolution));
-      });
-    });
+    const map = new Map(urls.flat().map((item) => [item.id, item.src]));
 
     // sort and clear index
     urls = [...map.entries()]
@@ -181,5 +148,36 @@
     msgBox.innerHTML = "保存中";
     doc.save(document.title + ".pdf");
     msgBox.innerHTML = "完成！";
+  }
+
+  /**
+   * 优化加载
+   */
+  async function optimizeImg() {
+    function loadImgForPage(element, observer) {
+      const index = Array.from(document.getElementsByClassName('fwr_page_box')).indexOf(element) + 1;
+      observer.unobserve(element);
+
+      if (index % 3 !== 1) return;
+      print('load image for page', index)
+      omg(index + 3); // 提前加载 3 页
+    }
+
+    // 创建 IntersectionObserver 实例
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadImgForPage(entry.target, observer);
+        }
+      });
+    }, {
+      root: document.querySelector('#jspPane'), // 使用 jspPane 作为滚动容器
+      rootMargin: '0px',
+      threshold: 0 // 当 10% 的内容进入视口时触发
+    });
+
+    // 为每个 fwr_page_box 元素设置观察器
+    const pages = document.querySelectorAll('.fwr_page_box:nth-child(3n+1)');
+    pages.forEach(page => observer.observe(page));
   }
 })();
