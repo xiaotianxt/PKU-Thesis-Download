@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.0
+// @version      1.2.1
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -159,7 +159,7 @@
       observer.unobserve(element);
 
       if (index % 3 !== 1) return;
-      print('load image for page', index)
+      print(`load page ${index + 3} - ${index + 5}.`);
       omg(index + 3); // 提前加载 3 页
     }
 
