@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.1
+// @version      1.2.2
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -12,20 +12,22 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @license      GNU GPLv3
+// @grant        GM_addStyle
+// @history      1.2.2 修复了横屏图片的加载样式和pdf渲染样式
 // ==/UserScript==
 
 (function () {
   "use strict";
+  const print = (...args) => console.log("[PKU-Thesis-Download]", ...args);
   const OPTIMIZATION = "pku_thesis_download.optimization";
   const fid = $("#fid").val();
   const totalPage = parseInt($("#totalPages").html().replace(/ \/ /, ""));
   const baseUrl = `https://drm.lib.pku.edu.cn/jumpServlet?fid=${fid}`;
   const msgBox = initUI();
 
-  const print = (...args) => console.log("[PKU-Thesis-Download]", ...args);
 
   if (localStorage.getItem(OPTIMIZATION) === "true" || !localStorage.getItem(OPTIMIZATION)) {
-    optimizeImg();
+    optimizeImgLoading();
   }
 
   function initUI() {
@@ -54,10 +56,38 @@
 
     document.querySelector("#btnList").appendChild(optimizeImg);
 
+    GM_addStyle(`
+      .loadingBg {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    `);
+
+    const observer = new MutationObserver((mutationsList) => {
+      for (let mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeName === 'IMG' && node.parentElement.classList.contains('loadingBg')) {
+              node.addEventListener('load', function () {
+                const img = node;
+                if (img.naturalWidth > img.naturalHeight) {
+                  // 横向图片
+                  img.style.height = 'min(100%, 90vw / 1.414)';
+                  img.style.width = 'auto';
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+
+    observer.observe(document.querySelector(".jspPane-scroll"), { childList: true, subtree: true });
+
     // msgBox
     const msgBox = downloadButton.querySelector("span");
     return msgBox;
-
   }
 
 
@@ -97,7 +127,7 @@
    * 下载图片
    */
   async function solveImg(urls) {
-    async function downloadPdf(url, i) {
+    async function downloadPdf(url) {
       return fetch(url)
         .then((res) => res.blob())
         .then((blob) => {
@@ -105,9 +135,16 @@
           reader.readAsDataURL(blob);
           return new Promise((resolve) => {
             reader.onloadend = () => {
-              resolve(reader.result);
-              numFinished++;
-              msgBox.innerHTML = numFinished + "/" + numTotal;
+              const base64 = reader.result;
+              const img = new Image();
+              img.src = base64;
+
+              img.onload = () => {
+                const orientation = img.width > img.height ? "landscape" : "portrait";
+                resolve({ base64, orientation });
+                numFinished++;
+                msgBox.innerHTML = numFinished + "/" + numTotal;
+              };
             };
           });
         });
@@ -140,11 +177,16 @@
    */
   async function solvePDF(base64s) {
     msgBox.innerHTML = "拼接中";
-    const doc = new jspdf.jsPDF();
-    base64s.forEach((base64, index) => {
-      doc.addImage(base64, "JPEG", 0, 0, 210, 297);
-      index + 1 == base64s.length || doc.addPage();
-    });
+    const doc = new jspdf.jsPDF({ format: 'a4', orientation: 'portrait' });
+    for (let i = 0; i < base64s.length; i++) {
+      const { base64, orientation } = base64s[i];
+      if (orientation === "landscape") {
+        doc.addImage(base64, "JPEG", 0, 0, 297, 210);
+      } else {
+        doc.addImage(base64, "JPEG", 0, 0, 210, 297);
+      }
+      i + 1 == base64s.length || doc.addPage("a4", base64s[i + 1].orientation);
+    }
     msgBox.innerHTML = "保存中";
     doc.save(document.title + ".pdf");
     msgBox.innerHTML = "完成！";
@@ -153,7 +195,7 @@
   /**
    * 优化加载
    */
-  async function optimizeImg() {
+  async function optimizeImgLoading() {
     function loadImgForPage(element, observer) {
       const index = Array.from(document.getElementsByClassName('fwr_page_box')).indexOf(element) + 1;
       observer.unobserve(element);
