@@ -6,7 +6,7 @@
   <a href="https://github.com/xiaotianxt/PKU-Thesis-Download" style="text-decoration: none;">
     <img alt="Static Badge" src="https://img.shields.io/github/stars/xiaotianxt/PKU-Thesis-Download">
   </a>
-  <a href="https://github.com/xiaotianxt/PKU-Thesis-Download" style="text-decoration: none;">
+  <a href="https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download-%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7" style="text-decoration: none;">
     <img src="https://img.shields.io/greasyfork/v/442310" alt="version">
   </a>
   <a href="https://github.com/xiaotianxt/PKU-Thesis-Download" style="text-decoration: none;">
