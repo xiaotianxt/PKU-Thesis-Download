@@ -1,5 +1,5 @@
 <h1 align="center">
-北京大学学位论文数据库下载工具
+北京大学学位论文数据库（含医学部）下载工具
 </h1>
 
 <div align="center">
@@ -47,7 +47,7 @@
 
 本工具可以：
 
-1. 下载[北京大学学位论文数据库](https://thesis.lib.pku.edu.cn/)中可查看的论文。
+1. 下载[北京大学学位论文数据库](https://thesis.lib.pku.edu.cn/)和[北京大学医学部论文系统](https://xuewei-443.webvpn.bjmu.edu.cn/)中可查看的论文。
 2. 优化论文阅读体验，即通过预先加载剩余页面，降低等待缓冲时间。
 
 本工具不能：
