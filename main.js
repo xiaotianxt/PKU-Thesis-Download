@@ -3,17 +3,20 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.2
+// @version      1.2.3
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
 // @match        https://drm.lib.pku.edu.cn/pdfindex*
+// @match        https://drm-lib-pku-edu-cn-443.webvpn.bjmu.edu.cn/pdfindex*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=pku.edu.cn
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @license      GNU GPLv3
 // @grant        GM_addStyle
 // @history      1.2.2 修复了横屏图片的加载样式和pdf渲染样式
+// @downloadURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.user.js
+// @updateURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.meta.js
 // ==/UserScript==
 
 (function () {
@@ -22,7 +25,7 @@
   const OPTIMIZATION = "pku_thesis_download.optimization";
   const fid = $("#fid").val();
   const totalPage = parseInt($("#totalPages").html().replace(/ \/ /, ""));
-  const baseUrl = `https://drm.lib.pku.edu.cn/jumpServlet?fid=${fid}`;
+  const baseUrl = `/jumpServlet?fid=${fid}`;
   const msgBox = initUI();
 
 
