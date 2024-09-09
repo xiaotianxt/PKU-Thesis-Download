@@ -21,6 +21,63 @@
 
 (function () {
   "use strict";
+
+  class ParallelRateLimiter {
+    constructor(maxParallel) {
+      this.queue = [];
+      this.running = 0;
+      this.maxParallel = maxParallel;
+    }
+
+    add(fn) {
+      return new Promise((resolve, reject) => {
+        const wrappedFn = async () => {
+          this.running++;
+          try {
+            const result = await fn();
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          } finally {
+            this.running--;
+            this.runNext();
+          }
+        };
+
+        if (this.running < this.maxParallel) {
+          wrappedFn();
+        } else {
+          this.queue.push(wrappedFn);
+        }
+      });
+    }
+
+    runNext() {
+      if (this.queue.length > 0 && this.running < this.maxParallel) {
+        const nextFn = this.queue.shift();
+        if (nextFn) {
+          nextFn();
+        }
+      }
+    }
+  }
+
+  async function retry(fn, retries = 3, delay = 1000) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries > 0) {
+        console.warn(`Retrying, attempts left: ${retries}`);
+        await new Promise((resolve) => setTimeout(resolve, delay)); // 等待指定的毫秒数
+        return retry(fn, retries - 1, delay);
+      } else {
+        console.error(`Failed after ${retries} attempts`);
+        throw error;
+      }
+    }
+  }
+
+  const limiter = new ParallelRateLimiter(5);
   const print = (...args) => console.log("[PKU-Thesis-Download]", ...args);
   const OPTIMIZATION = "pku_thesis_download.optimization";
   const fid = $("#fid").val();
@@ -106,37 +163,40 @@
    */
   async function solveSrc() {
     async function downloadSrcInfo(url) {
-      return fetch(url)
-        .then((res) => res.json())
-        .then((json) => {
-          finished++;
-          msgBox.innerHTML = finished + "/" + page;
-          return json.list;
-        });
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const json = await res.json();
+      finished += 2;
+      msgBox.innerHTML = `${finished}/${totalPage}`;
+      return json.list;
     }
 
-    let urlPromise = [];
-    let page = 0;
     let finished = 0;
-    for (; page < totalPage; page++) {
-      const url = baseUrl + "&page=" + page;
-      urlPromise.push(downloadSrcInfo(url));
-      msgBox.innerHTML = finished + "/" + page;
+
+    const tasks = [];
+    for (let page = 0; page < totalPage; page += 2) {
+      const url = `${baseUrl}&page=${page}`;
+      tasks.push(() => retry(async () => downloadSrcInfo(url)));
     }
-    return Promise.all(urlPromise);
+
+    const results = await Promise.all(tasks.map(task => limiter.add(task)));
+    return results.flat(); // 假设我们想要一个扁平化的结果数组
   }
 
   /**
    * 下载图片
    */
   async function solveImg(urls) {
+    let numFinished = 0;
     async function downloadPdf(url) {
       return fetch(url)
         .then((res) => res.blob())
         .then((blob) => {
           const reader = new FileReader();
           reader.readAsDataURL(blob);
-          return new Promise((resolve) => {
+          return new Promise((resolve, reject) => {
             reader.onloadend = () => {
               const base64 = reader.result;
               const img = new Image();
@@ -148,6 +208,11 @@
                 numFinished++;
                 msgBox.innerHTML = numFinished + "/" + numTotal;
               };
+
+              img.onerror = () => {
+                console.error("Failed to load image", url);
+                reject(null);
+              }
             };
           });
         });
@@ -156,22 +221,26 @@
     // remove duplicated
     const map = new Map(urls.flat().map((item) => [item.id, item.src]));
 
+    // assert that all pages are loaded
+    if (map.size !== totalPage) {
+      const missing = Array.from({ length: totalPage }, (_, i) => i + 1).filter((i) => !map.has(`${i}`));
+      alert(`部分页面没有加载出来，请联系开发者。\n缺少：${missing.join(",")}`);
+    }
+
     // sort and clear index
-    urls = [...map.entries()]
+    const sortedUrls = [...map.entries()]
       .sort((a, b) => a[0] - b[0])
       .map((item) => item[1]);
 
     // download images
-    const base64Promise = [];
-    let numFinished = 0;
-    let numTotal = 0;
-    urls.forEach((url) => {
-      base64Promise.push(downloadPdf(url));
-      numTotal++;
-      msgBox.innerHTML = numFinished + "/" + numTotal;
+    const tasks = [];
+    const numTotal = sortedUrls.length;
+
+    sortedUrls.forEach((url) => {
+      tasks.push(async () => await retry(async () => await downloadPdf(url)));
     });
 
-    return Promise.all(base64Promise);
+    return Promise.all(tasks.map(task => limiter.add(task)));
   }
 
   /**
