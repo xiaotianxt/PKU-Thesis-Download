@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.4
+// @version      1.2.5
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -17,6 +17,7 @@
 // @history      1.2.2 修复了横屏图片的加载样式和pdf渲染样式
 // @history      1.2.3 支持北医 Web VPN 系统
 // @history      1.2.4 适配限流问题
+// @history      1.2.5 适当降低请求频率，避免触发过多限流
 // @downloadURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.user.js
 // @updateURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.meta.js
 // ==/UserScript==
@@ -64,22 +65,27 @@
     }
   }
 
-  async function retry(fn, retries = 3, delay = 1000) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (retries > 0) {
-        console.warn(`Retrying, attempts left: ${retries}`);
-        await new Promise((resolve) => setTimeout(resolve, delay)); // 等待指定的毫秒数
-        return retry(fn, retries - 1, delay);
-      } else {
-        console.error(`Failed after ${retries} attempts`);
-        throw error;
+  async function retry(fn, retries = 3, initialDelay = 1000) {
+    let attempt = 0;
+    while (true) {
+      try {
+        return await fn();
+      } catch (error) {
+        attempt++;
+        if (attempt >= retries) {
+          console.error(`Failed after ${retries} attempts`);
+          throw error;
+        }
+
+        // 计算指数退避延迟时间: initialDelay * 2^attempt + 随机抖动
+        const delay = initialDelay * Math.pow(2, attempt) + Math.random() * 1000;
+        console.warn(`Attempt ${attempt} failed. Retrying in ${Math.round(delay)}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
 
-  const limiter = new ParallelRateLimiter(5);
+  const limiter = new ParallelRateLimiter(3);
   const print = (...args) => console.log("[PKU-Thesis-Download]", ...args);
   const OPTIMIZATION = "pku_thesis_download.optimization";
   const fid = $("#fid").val();
