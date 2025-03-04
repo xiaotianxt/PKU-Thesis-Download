@@ -3,12 +3,13 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.5
+// @version      1.2.6
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
 // @match        https://drm.lib.pku.edu.cn/pdfindex*
 // @match        https://drm-lib-pku-edu-cn-443.webvpn.bjmu.edu.cn/pdfindex*
+// @match        https://wpn.pku.edu.cn/https/*/pdfindex*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=pku.edu.cn
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
@@ -18,6 +19,7 @@
 // @history      1.2.3 支持北医 Web VPN 系统
 // @history      1.2.4 适配限流问题
 // @history      1.2.5 适当降低请求频率，避免触发过多限流
+// @history      1.2.6 支持北大 Web VPN 系统
 // @downloadURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.user.js
 // @updateURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.meta.js
 // ==/UserScript==
@@ -92,6 +94,7 @@
   const totalPage = parseInt($("#totalPages").html().replace(/ \/ /, ""));
   const baseUrl = `/jumpServlet?fid=${fid}`;
   const msgBox = initUI();
+  const isWPN = location.href.includes('wpn.pku.edu.cn')
 
 
   if (localStorage.getItem(OPTIMIZATION) === "true" || !localStorage.getItem(OPTIMIZATION)) {
@@ -158,6 +161,11 @@
     return msgBox;
   }
 
+  function processWPN(url) {
+    const baseWPN = location.href.split('pdfindex')[0];
+    return `${baseWPN}pdfboxServlet` + url.split('pdfboxServlet')[1] + '&vpn=1'
+  }
+
 
   async function download(e) {
     e.preventDefault();
@@ -199,6 +207,9 @@
   async function solveImg(urls) {
     let numFinished = 0;
     async function downloadPdf(url) {
+      if (isWPN) {
+        url = processWPN(url)
+      }
       return fetch(url)
         .then((res) => res.blob())
         .then((blob) => {
