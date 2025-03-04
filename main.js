@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.3.0
+// @version      1.3.1
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -21,6 +21,7 @@
 // @history      1.2.5 适当降低请求频率，避免触发过多限流
 // @history      1.2.6 支持北大 Web VPN 系统
 // @history      1.3.0 优化图片加载失败重试机制
+// @history      1.3.1 恢复重试时的loading动画
 // @downloadURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.user.js
 // @updateURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.meta.js
 // ==/UserScript==
@@ -375,6 +376,21 @@
         setTimeout(() => {
           // 清除错误状态
           img.style.display = '';
+          
+          // 重新显示loading动画（在父元素loadingBg上）
+          const loadingBgParent = img.closest('.loadingBg');
+          if (loadingBgParent) {
+            // 确保loadingBg显示
+            loadingBgParent.style.display = 'block';
+          }
+          
+          // 将图片设置为透明，这样可以看到背景的loading动画
+          img.style.opacity = '0';
+          
+          // 当图片加载成功时恢复透明度
+          img.onload = function() {
+            img.style.opacity = '1';
+          };
 
           // 添加时间戳参数避免缓存
           const timestamp = new Date().getTime();
