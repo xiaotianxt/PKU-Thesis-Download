@@ -3,7 +3,7 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download
 // @supportURL   https://github.com/xiaotianxt/PKU-Thesis-Download
 // @homepageURL  https://github.com/xiaotianxt/PKU-Thesis-Download
-// @version      1.2.6
+// @version      1.3.0
 // @description  北大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
 // @match        http://162.105.134.201/pdfindex*
@@ -20,6 +20,7 @@
 // @history      1.2.4 适配限流问题
 // @history      1.2.5 适当降低请求频率，避免触发过多限流
 // @history      1.2.6 支持北大 Web VPN 系统
+// @history      1.3.0 优化图片加载失败重试机制
 // @downloadURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.user.js
 // @updateURL https://update.greasyfork.org/scripts/442310/PKU-Thesis-Download%20%E5%8C%97%E5%A4%A7%E8%AE%BA%E6%96%87%E5%B9%B3%E5%8F%B0%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7.meta.js
 // ==/UserScript==
@@ -121,7 +122,7 @@
       const checked = e.target.checked;
       localStorage.setItem(OPTIMIZATION, checked);
       if (checked) {
-        optimizeImg();
+        optimizeImgLoading();
       }
     });
 
@@ -263,54 +264,160 @@
   }
 
   /**
-   * 拼接为pdf
-   * @param {*} base64s
+   * PDF生成与保存
+   * @param {Array} base64s - 包含图片base64数据和方向信息的数组
    */
   async function solvePDF(base64s) {
     msgBox.innerHTML = "拼接中";
     const doc = new jspdf.jsPDF({ format: 'a4', orientation: 'portrait' });
+
     for (let i = 0; i < base64s.length; i++) {
       const { base64, orientation } = base64s[i];
-      if (orientation === "landscape") {
+      const isLandscape = orientation === "landscape";
+
+      // 根据方向设置不同的尺寸
+      if (isLandscape) {
         doc.addImage(base64, "JPEG", 0, 0, 297, 210);
       } else {
         doc.addImage(base64, "JPEG", 0, 0, 210, 297);
       }
-      i + 1 == base64s.length || doc.addPage("a4", base64s[i + 1].orientation);
+
+      // 如果不是最后一页，添加新页面
+      if (i + 1 < base64s.length) {
+        doc.addPage("a4", base64s[i + 1].orientation);
+      }
     }
+
     msgBox.innerHTML = "保存中";
     doc.save(document.title + ".pdf");
     msgBox.innerHTML = "完成！";
   }
 
   /**
-   * 优化加载
+   * 优化图片加载策略
+   * 实现懒加载、预加载和加载失败自动重试机制
    */
   async function optimizeImgLoading() {
+    /**
+     * 为指定页面加载图片
+     * @param {Element} element - 页面元素
+     * @param {IntersectionObserver} observer - 观察器实例
+     */
     function loadImgForPage(element, observer) {
-      const index = Array.from(document.getElementsByClassName('fwr_page_box')).indexOf(element) + 1;
+      const pages = document.getElementsByClassName('fwr_page_box');
+      const index = Array.from(pages).indexOf(element) + 1;
       observer.unobserve(element);
 
+      // 每三页触发一次预加载
       if (index % 3 !== 1) return;
+
       print(`load page ${index + 3} - ${index + 5}.`);
-      omg(index + 3); // 提前加载 3 页
+      omg(index + 3); // 提前加载3页
     }
 
-    // 创建 IntersectionObserver 实例
-    const observer = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          loadImgForPage(entry.target, observer);
-        }
-      });
-    }, {
-      root: document.querySelector('#jspPane'), // 使用 jspPane 作为滚动容器
-      rootMargin: '0px',
-      threshold: 0 // 当 10% 的内容进入视口时触发
-    });
+    /**
+     * 设置图片加载监控和自动重试机制
+     */
+    function setupImgLoadMonitor() {
+      const imgObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          if (mutation.type !== 'childList') return;
 
-    // 为每个 fwr_page_box 元素设置观察器
+          mutation.addedNodes.forEach(node => {
+            // 筛选需要监控的图片元素
+            const isTargetImage =
+              node.nodeName === 'IMG' &&
+              node.classList.contains('fwr_page_bg_image') &&
+              node.parentElement?.classList.contains('loadingBg');
+
+            if (!isTargetImage) return;
+
+            // 保存原始src用于重试
+            const originalSrc = node.src;
+            node.setAttribute('data-original-src', originalSrc);
+
+            // 延迟检查图片加载状态
+            setTimeout(() => checkAndRetryIfNeeded(node), 1000);
+          });
+        });
+      });
+
+      /**
+       * 检查图片加载状态并在需要时重试
+       * @param {HTMLImageElement} img - 图片元素
+       * @param {number} retryCount - 当前重试次数
+       */
+      const checkAndRetryIfNeeded = (img, retryCount = 0) => {
+        const maxRetries = 10;
+
+        // 图片已成功加载
+        if (img.complete && img.naturalWidth > 0) {
+          return;
+        }
+
+        // 达到最大重试次数
+        if (retryCount >= maxRetries) {
+          console.error(`[PKU-Thesis-Download] Failed to load image after ${maxRetries} attempts: ${img.id}`);
+          return;
+        }
+
+        // 使用指数退避算法计算下次重试延迟
+        const baseDelay = 1000 * Math.pow(2, retryCount);
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+
+        console.warn(
+          `[PKU-Thesis-Download] Image not loaded properly, retry ${retryCount + 1} of ${maxRetries} ` +
+          `in ${Math.round(delay)}ms: ${img.id}`
+        );
+
+        // 延迟后重试加载
+        setTimeout(() => {
+          // 清除错误状态
+          img.style.display = '';
+
+          // 添加时间戳参数避免缓存
+          const timestamp = new Date().getTime();
+          const originalSrc = img.getAttribute('data-original-src');
+          const separator = originalSrc.includes('?') ? '&' : '?';
+          const newSrc = `${originalSrc}${separator}_retry=${timestamp}`;
+
+          // 重新设置src触发加载
+          img.src = newSrc;
+
+          // 安排下一次检查
+          setTimeout(() => checkAndRetryIfNeeded(img, retryCount + 1), 1000);
+        }, delay);
+      };
+
+      // 观察整个文档的DOM变化
+      imgObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // 创建交叉观察器用于懒加载
+    const observer = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            loadImgForPage(entry.target, observer);
+          }
+        });
+      },
+      {
+        root: document.querySelector('#jspPane'),
+        rootMargin: '0px',
+        threshold: 0
+      }
+    );
+
+    // 选择性地观察页面容器
     const pages = document.querySelectorAll('.fwr_page_box:nth-child(3n+1)');
     pages.forEach(page => observer.observe(page));
+
+    // 启动图片加载监控
+    setupImgLoadMonitor();
   }
 })();
