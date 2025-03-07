@@ -56,9 +56,12 @@
 2. 为无北京大学学位论文数据库权限的用户提供权限。
 3. 选中、复制、修改论文内容。
 
-## 用法
+## 安装
 
-1. 安装[tampermonkey](https://www.tampermonkey.net/index.php?ext=dhdg)，无法科学上网可以参考[这里](https://zhuanlan.zhihu.com/p/128453110)。
+1. 启用开发者模式并[点击链接安装 Tampermonkey](https://www.tampermonkey.net/index.php?ext=dhdg)，无法科学上网可以参考[这里](https://zhuanlan.zhihu.com/p/128453110)。
+  如果安装前没有打开开发者模式,则需要**卸载重装**：
+  <br><img src="./Instruction.png" width=400>
+
 2. 安装[此脚本](https://greasyfork.org/zh-CN/scripts/442310-pku-thesis-download)。
 3. 打开某篇论文在线阅读，在左侧列表点击下载文件按钮。
 
