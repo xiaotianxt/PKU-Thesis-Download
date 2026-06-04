@@ -6,7 +6,7 @@
 // @version      0.2
 // @description  人大论文平台下载工具，请勿传播下载的文件，否则后果自负。
 // @author       xiaotianxt
-// @match        http://*.ruc.edu.cn/foxit-htmlreader-web/Reader.do*
+// @match        *://*.ruc.edu.cn/foxit-htmlreader-web/Reader.do*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=ruc.edu.cn
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @license      GNU GPLv3
